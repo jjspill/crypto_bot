@@ -1,5 +1,5 @@
 *.env
 *.DS_Store
 *__pycache__/
-*deployment_package
+*deployment_package*
 *chain
