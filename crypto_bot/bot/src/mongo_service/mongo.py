@@ -1,16 +1,11 @@
-import os
 from datetime import datetime
 
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 from pytz import timezone
-
-CLIENT = MongoClient(os.getenv("MONGO_URI"), server_api=ServerApi("1"))
 
 
 class MongoDB:
-    def __init__(self, database_name, collection_name):
-        self.client = CLIENT
+    def __init__(self, client, database_name, collection_name):
+        self.client = client
         self.db = self.client[database_name]
         self.collection = self.db[collection_name]
         self.collection.create_index(
@@ -18,8 +13,8 @@ class MongoDB:
         )  # Ensure indexing on the timestamp
         self.document = {}
 
-    def add_data(self, key, data):
-        self.document[key] = data
+    def add_data(self, data: dict):
+        self.document.update(data)
 
     def commit_data(self):
         if self.document:
@@ -27,9 +22,12 @@ class MongoDB:
             current_time_est = (
                 datetime.utcnow().replace(tzinfo=timezone("UTC")).astimezone(est)
             )
+            # This should run on the hour so we can aggregate data by the hour
             formatted_time = current_time_est.strftime("%Y-%m-%d %H:00")
             self.document["timestamp"] = formatted_time
-            self.collection.insert_one(self.document)
+            print("Data to commit:", self.document)
+            result = self.collection.insert_one(self.document)
+            print("Data inserted with ID:", result.inserted_id)
             print(
                 "Data committed to MongoDB with timestamp:", self.document["timestamp"]
             )

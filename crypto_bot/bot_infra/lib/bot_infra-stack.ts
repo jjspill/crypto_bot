@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 interface BotInfraStackProps extends cdk.StackProps {
@@ -32,11 +34,11 @@ export class BotInfraStack extends cdk.Stack {
       },
     });
 
-    // The code that defines your stack goes here
+    // Rule to trigger the lambda function every hour
+    const rule = new events.Rule(this, 'HourlyTrigger', {
+      schedule: events.Schedule.cron({ minute: '0' }),
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'BotInfraQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    rule.addTarget(new targets.LambdaFunction(lambdaFunction));
   }
 }
